@@ -1,25 +1,41 @@
-AUX_SOURCE_DIRECTORY(. SRC_LIST)
-
-SET(Particles2d_sources
+set(Particles2d_sources
+	window.cpp
+	state/startstate.cpp
+	state/gamestate.cpp
+	terrain/simplexnoise.cpp
+	world/world.cpp
 )
 
-SET(Particles2d_headers
+set(Particles2d_headers
+	defs.h
+	version.h
+	gl.h
+	window.h
+	state/state.h
+	state/startstate.h
+	state/gamestate.h
+	terrain/simplexnoise.h
+	util/logger.h
+	util/random.h
+	util/offsetvector.h
+	world/world.h
 )
 
-ADD_EXECUTABLE(${PROJECT_NAME} main.cpp ${Particles2d_sources} ${Particles2d_headers})
+include_directories(.)
+add_executable(${PROJECT_NAME} main.cpp ${Particles2d_sources} ${Particles2d_headers})
 
 
 # OpenGL dependency
-FIND_PACKAGE(OpenGL REQUIRED)
-INCLUDE_DIRECTORIES( ${OPENGL_INCLUDE_DIRS} )
-TARGET_LINK_LIBRARIES(particles2d ${OPENGL_LIBRARIES} )
+find_package(OpenGL REQUIRED)
+include_directories( ${OPENGL_INCLUDE_DIRS} )
+target_link_libraries(particles2d ${OPENGL_LIBRARIES} )
 
 # GLEW dependency
-ADD_LIBRARY(GLEW SHARED IMPORTED)
-INCLUDE_DIRECTORIES( ${GLEW_INCLUDE_DIRS} )
-TARGET_LINK_LIBRARIES(particles2d ${GLEW_LIBRARIES} )
+add_library(GLEW SHARED IMPORTED)
+include_directories( ${GLEW_INCLUDE_DIRS} )
+target_link_libraries(particles2d ${GLEW_LIBRARIES} )
 
 # GLFW dependency
-ADD_LIBRARY(GLFW SHARED IMPORTED)
-INCLUDE_DIRECTORIES( ${GLFW_INCLUDE_DIRS} )
-TARGET_LINK_LIBRARIES(particles2d ${GLFW_LIBRARIES} )
+add_library(GLFW SHARED IMPORTED)
+include_directories( ${GLFW_INCLUDE_DIRS} )
+target_link_libraries(particles2d ${GLFW_LIBRARIES} )

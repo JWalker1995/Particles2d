@@ -1,12 +1,12 @@
-PROJECT(particles2d)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+project(particles2d)
+cmake_minimum_required(VERSION 2.8)
 
-IF (NOT CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE)
 # SET(CMAKE_BUILD_TYPE "Debug")
- SET(CMAKE_BUILD_TYPE "Release")
-ENDIF (NOT CMAKE_BUILD_TYPE) 
+ set(CMAKE_BUILD_TYPE "Release")
+endif(NOT CMAKE_BUILD_TYPE)
 
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
-SUBDIRS(src)
+subdirs(src)

@@ -1,9 +1,17 @@
 #include <iostream>
 
+#include "util/logger.h"
+#include "window.h"
+
 int main(int argc, char** argv)
 {
-	std::cout << "Hello World" << std::endl;
-	
-    return 0;
+    Logger::info("Starting...");
+
+    Window window;
+    bool res = window.run();
+
+    Logger::info("Ending...");
+
+    return res;
 }
 
