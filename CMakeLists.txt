@@ -14,7 +14,9 @@ set(Particles2d_sources
 	src/state/startstate.cpp
 	src/state/gamestate.cpp
 	src/terrain/simplexnoise.cpp
+	src/terrain/terrain.cpp
 	src/world/world.cpp
+	src/world/view.cpp
 )
 
 set(Particles2d_headers
@@ -26,10 +28,14 @@ set(Particles2d_headers
 	src/state/startstate.h
 	src/state/gamestate.h
 	src/terrain/simplexnoise.h
+	src/terrain/terrain.h
 	src/util/logger.h
 	src/util/random.h
 	src/util/offsetvector.h
+	src/world/particle.h
+	src/world/solid.h
 	src/world/world.h
+	src/world/view.h
 )
 
 include_directories(src)

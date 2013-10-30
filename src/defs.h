@@ -4,8 +4,8 @@
 #include <assert.h>
 //#define NDEBUG
 
-// Bin size in pixels
-#define BIN_SIZE 64
+// Chunk size in pixels
+#define CHUNK_SIZE 64
 
 // Simulation gravity and friction
 #define GRAVITY 0.1f

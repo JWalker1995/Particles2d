@@ -21,4 +21,5 @@ build-*
 *-build-*
 
 CMakeLists.txt.user
+CMakeLists.txt.user.*
 bin/

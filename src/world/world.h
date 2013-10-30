@@ -4,6 +4,9 @@
 #include <vector>
 
 #include "defs.h"
+
+#include "world/particle.h"
+#include "terrain/terrain.h"
 #include "util/offsetvector.h"
 
 class World
@@ -14,30 +17,20 @@ public:
     void tick(float time);
 
 protected:
-
-    struct StaticParticle
-    {
-        char type;
-    };
-    struct DynamicParticle
-    {
-        char type;
-        float x;
-        float y;
-        float vx;
-        float vy;
-    };
+    Particle &get_particle(signed int x, signed int y);
 
     struct Bin
     {
         Bin() {}
 
-        StaticParticle *static_particles = 0;
+        Particle *particles = 0;
     };
 
     OffsetVector<OffsetVector<Bin>> bins;
 
-    std::vector<DynamicParticle> dynamic_particles;
+    std::vector<Solid> solids;
+
+    Terrain terrain;
 
     /*
     Particle queries:

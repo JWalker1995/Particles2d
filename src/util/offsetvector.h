@@ -14,9 +14,9 @@ public:
     {
         if (items.empty())
         {
-            items.emplace();
+            items.emplace_back();
             offset = i;
-            return items[0];
+            return items.front();
         }
 
         if (i < offset)

@@ -70,14 +70,7 @@ GameState::GameState(int seed)
 
     glClearColor(0.0, 0.0, 0.2, 0.0);
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glEnable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-
-
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glEnable(GL_COLOR_MATERIAL);
+    glDisable(GL_DEPTH_TEST);
 
     // Create light components.
     GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
