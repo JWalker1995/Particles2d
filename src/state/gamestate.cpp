@@ -70,8 +70,6 @@ GameState::GameState(int seed)
 
     glClearColor(0.0, 0.0, 0.2, 0.0);
 
-    glDisable(GL_DEPTH_TEST);
-
     // Create light components.
     GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
     GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, 1.0f };
@@ -121,20 +119,31 @@ State *GameState::tick(float time)
     {
     }
 
+    world->tick(time);
+
     int width = get_window()->get_width();
     int height = get_window()->get_height();
-    float ratio = (float) width / (float) height;
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, ratio, 1, 1000);
+    glOrtho(0, width, height, 0, 0, 1);
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    //gluLookAt(player_pos.x, player_pos.y, player_pos.z, player_pos.x + player_orient.x, player_pos.y + player_orient.y, player_pos.z + player_orient.z, 0.0, 1.0, 0.0);
+    //glColor3f(1,1,1);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, world->get_texture());
 
-    world->tick(time);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex2i(0, 0);
+    glTexCoord2f(0, 1); glVertex2i(0, height);
+    glTexCoord2f(1, 1); glVertex2i(width, height);
+    glTexCoord2f(1, 0); glVertex2i(width, 0);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
 
     return 0;
 }

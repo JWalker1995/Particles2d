@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "defs.h"
+#include "gl.h"
 
 #include "world/particle.h"
 #include "terrain/terrain.h"
@@ -15,6 +16,8 @@ public:
     World(int seed, int version);
 
     void tick(float time);
+
+    GLuint get_texture() {return tex;}
 
 protected:
     Particle &get_particle(signed int x, signed int y);
@@ -31,6 +34,8 @@ protected:
     std::vector<Solid> solids;
 
     Terrain terrain;
+
+    GLuint tex;
 
     /*
     Particle queries:
