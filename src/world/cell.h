@@ -9,7 +9,7 @@ struct Cell
 	{
 		// t_static
 		// char type;
-		ParticleType *type;
+        const ParticleType *type;
 			// Mass
 			// Color
 			// Sleep time

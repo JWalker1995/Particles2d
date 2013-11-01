@@ -1,9 +1,9 @@
 #include "world.h"
 
 World::World(int seed, int version)
-    : terrain(seed, version)
+    : terrain(new Terrain(seed, version))
 {
-    root = new Chunk();
+    root = new Chunk(this, 0, 0);
     root->neighbors[0] = 0;
     root->neighbors[1] = 0;
     root->neighbors[2] = 0;
@@ -34,40 +34,55 @@ void World::tick(float time)
 {
     float ay = GRAVITY / time;
 
-    std::deque<Solid*>::iterator si = solids.begin();
+    WeakSet<Solid*>::iterator si = solids.begin();
     while (si != solids.end())
     {
-        si->vx *= DAMPING;
-        si->vy *= DAMPING;
-        si->vy += ay;
+        Solid *s = *si;
+        s->vx *= DAMPING;
+        s->vy *= DAMPING;
+        s->vy += ay;
 
-        si->vr *= ANGULAR_DAMPING;
-        si->sin_vr = sin(vr);
-        si->cos_vr = cos(vr);
+        s->vr *= ANGULAR_DAMPING;
+        s->sin_vr = sin(s->vr);
+        s->cos_vr = cos(s->vr);
 
         si++;
     }
 
-    std::deque<Particle*>::iterator pi = particles.begin();
-    while (pi != particles.end())
+    WeakSet<Chunk*>::iterator ci = dynamic_chunks.begin();
+    while (ci != dynamic_chunks.end())
     {
-        Solid* solid = si->solid;
-        if (solid)
+        Chunk* c = *ci;
+        WeakSet<Particle*>::iterator pi = c->particles.begin();
+        WeakSet<Particle*>::iterator pie = c->particles.end();
+        while (pi != pie)
         {
-            float dx = si->x - solid->x;
-            float dy = si->y - solid->y;
+            Particle *p = *pi;
+            Solid* solid = p->solid;
+            if (solid)
+            {
+                float dx = p->x - solid->x;
+                float dy = p->y - solid->y;
 
-            si->vx = solid->x + solid->vx + solid->cos_vr * dx - solid->sin_vr * dy;
-            si->vy = solid->y + solid->vy + solid->sin_vr * dx - solid->cos_vr * dy;
+                p->vx = solid->vx - solid->sin_vr * dx + solid->cos_vr * dy;
+                p->vy = solid->vy - solid->cos_vr * dx + solid->sin_vr * dy;
 
-            si->x += si->vx;
-            si->y += si->vy;
+                p->x += p->vx;
+                p->y += p->vy;
+            }
+            pi++;
         }
 
-        pi++;
+        ci++;
     }
 }
 
+void World::initialize_chunk(Chunk *chunk)
+{
+    terrain->make_chunk(chunk);
+}
+
+/*
 Cell &World::get_cell(signed int x, signed int y)
 {
     Cell &cell = cells[x][y];
@@ -77,6 +92,7 @@ Cell &World::get_cell(signed int x, signed int y)
     }
     return cell;
 }
+*/
 
 /*
 World::Chunk &World::get_bin(signed int cx, signed int cy)
@@ -109,6 +125,7 @@ Particle *World::get_particle(signed int x, signed int y)
 }
 */
 
+/*
 World::ProximityTestIterator World::query_particles(float x, float y, float rad)
 {
     return World::ProximityTestIterator(this, x, y, rad);
@@ -141,7 +158,6 @@ World::ProximityTestIterator::ProximityTestIterator(World *world, float x, float
 
     unsigned int particle_sy = my - bin_y * CHUNK_SIZE;
     particles_i = particle_sy * CHUNK_SIZE;
-    */
 }
 
 Particle *World::ProximityTestIterator::next()
@@ -180,3 +196,4 @@ Particle *World::ProximityTestIterator::next()
         }
     }
 }
+*/

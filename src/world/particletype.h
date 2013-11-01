@@ -3,7 +3,12 @@
 
 struct ParticleType
 {
+    ParticleType();
+
     float mass;
+
+    static const ParticleType *air;
+    static const ParticleType *dirt;
 };
 
 #endif // PARTICLETYPE_H

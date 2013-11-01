@@ -1,8 +1,8 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
-#include "world/particletype.h"
 #include "world/solid.h"
+#include "world/particletype.h"
 
 struct Particle
 {

@@ -18,19 +18,38 @@ Terrain::~Terrain()
     delete noise.main;
 }
 
-void Terrain::make_cell(signed int x, signed int y, Cell &cell)
+void Terrain::make_chunk(Chunk *chunk)
 {
-    float val = noise.main->octave_noise_2d(1, 0.5, 0.1, x, y) - y / 4.0;
-    if (val < 0.0)
+    float ax = chunk->cx * CHUNK_SIZE;
+    float ay = chunk->cy * CHUNK_SIZE;
+    float bx = ax + CHUNK_SIZE;
+    float by = ay + CHUNK_SIZE;
+
+    Cell *cell = chunk->cells;
+
+    float y = ay;
+    while (y < by)
     {
-        cell.state = t_static;
-        cell.temp = 0.0f;
-        cell.type = ParticleType::air;
-    }
-    else
-    {
-        cell.state = t_static;
-        cell.temp = 0.0f;
-        cell.type = ParticleType::ground;
+        float x = ax;
+        while (x < bx)
+        {
+            float val = noise.main->octave_noise_2d(1, 0.5, 0.1, x, y) - y / 4.0;
+            if (val < 0.0)
+            {
+                cell->state = Cell::t_static;
+                cell->temp = 0.0f;
+                cell->type = ParticleType::air;
+            }
+            else
+            {
+                cell->state = Cell::t_static;
+                cell->temp = 0.0f;
+                cell->type = ParticleType::dirt;
+            }
+            cell++;
+
+            x++;
+        }
+        y++;
     }
 }

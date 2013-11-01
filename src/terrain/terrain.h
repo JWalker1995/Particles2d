@@ -1,15 +1,21 @@
 #ifndef TERRAIN_H
 #define TERRAIN_H
 
-#include "world/cell.h"
-
-#include "util/random.h"
-#include "terrain/simplexnoise.h"
+#include <cstdint>
 
 #include "defs.h"
 #include "version.h"
 
-#include <cstdint>
+#include "world/world.h"
+#include "world/chunk.h"
+
+#include "util/random.h"
+#include "terrain/simplexnoise.h"
+
+// DEBUG
+#include <iostream>
+
+class Chunk;
 
 class Terrain
 {
@@ -26,7 +32,7 @@ public:
         SimplexNoise *main;
     } noise;
 
-    void make_cell(signed int x, signed int y, Cell &cell);
+    void make_chunk(Chunk *chunk);
 };
 
 #endif // TERRAIN_H

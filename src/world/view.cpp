@@ -6,7 +6,7 @@ View::View()
     int i = 0;
     while (i < 500 * 500 * 3)
     {
-        data[i] = rand() % 256;
+        //data[i] = rand() % 256;
         i++;
     }
 
