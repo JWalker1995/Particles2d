@@ -32,7 +32,9 @@ set(Particles2d_headers
 	src/util/logger.h
 	src/util/random.h
 	src/util/offsetvector.h
+	src/world/cell.h
 	src/world/particle.h
+	src/world/particletype.h
 	src/world/solid.h
 	src/world/world.h
 	src/world/view.h

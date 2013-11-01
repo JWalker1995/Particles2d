@@ -2,11 +2,19 @@
 #define SOLID_H
 
 #include <vector>
+#include <set>
 
+#include "gl.h"
+
+#include "util/offsetvector.h"
 #include "world/particle.h"
 
 struct Solid
 {
+    Solid()
+    {
+    }
+
     float x;
     float y;
     float r;
@@ -15,17 +23,22 @@ struct Solid
     float vy;
     float vr;
 
+    float sin_vr;
+    float cos_vr;
+
     float mass;
 
-    struct SolidParticle
+    struct Bin
     {
-        float x;
-        float y;
+        Bin() {}
 
-        char type;
+        Particle *particles;
+        std::set<Solid*> solids;
+
+        bool generated = false;
     };
 
-    std::vector<SolidParticle> particles;
+    OffsetVector<OffsetVector<Bin>> bins;
 
     void update_particles()
     {
@@ -66,6 +79,9 @@ struct Solid
     void apply_impulse(float x, float y, float ix, float iy)
     {
     }
+
+protected:
+    GLuint texture;
 };
 
 #endif // SOLID_H

@@ -3,6 +3,12 @@
 World::World(int seed, int version)
     : terrain(seed, version)
 {
+    root = new Chunk();
+    root->neighbors[0] = 0;
+    root->neighbors[1] = 0;
+    root->neighbors[2] = 0;
+    root->neighbors[3] = 0;
+
     GLubyte *data = new GLubyte[500 * 500 * 3];
     int i = 0;
     while (i < 500 * 500 * 3)
@@ -28,45 +34,149 @@ void World::tick(float time)
 {
     float ay = GRAVITY / time;
 
-    std::vector<Solid>::iterator i = solids.begin();
-    while (i != solids.end())
+    std::deque<Solid*>::iterator si = solids.begin();
+    while (si != solids.end())
     {
-        i->vx *= FRICTION;
-        i->vy *= FRICTION;
-        i->vy += ay;
+        si->vx *= DAMPING;
+        si->vy *= DAMPING;
+        si->vy += ay;
 
-        int orig_x = i->x;
-        int orig_y = i->y;
-        
-        i->x += i->vx;
-        i->y += i->vy;
-        
-        int new_x = i->x;
-        int new_y = i->y;
-        
-        if (orig_x != new_x || orig_y != new_y)
-        {
-            Particle &particle = get_particle(new_x, new_y);
-            if (particle.type)
-            {
+        si->vr *= ANGULAR_DAMPING;
+        si->sin_vr = sin(vr);
+        si->cos_vr = cos(vr);
 
-            }
-        }
-
-        i++;
+        si++;
     }
 
-    // Color stack - not good for many particles in a small space
-    // Last color
-    //     When pixel moves over
+    std::deque<Particle*>::iterator pi = particles.begin();
+    while (pi != particles.end())
+    {
+        Solid* solid = si->solid;
+        if (solid)
+        {
+            float dx = si->x - solid->x;
+            float dy = si->y - solid->y;
+
+            si->vx = solid->x + solid->vx + solid->cos_vr * dx - solid->sin_vr * dy;
+            si->vy = solid->y + solid->vy + solid->sin_vr * dx - solid->cos_vr * dy;
+
+            si->x += si->vx;
+            si->y += si->vy;
+        }
+
+        pi++;
+    }
 }
 
-Particle &World::get_particle(signed int x, signed int y)
+Cell &World::get_cell(signed int x, signed int y)
+{
+    Cell &cell = cells[x][y];
+    if (!cell.state == Cell::t_null)
+    {
+        terrain.make_cell(x, y, cell);
+    }
+    return cell;
+}
+
+/*
+World::Chunk &World::get_bin(signed int cx, signed int cy)
+{
+    Chunk &bin = bins[cx][cy];
+    if (!bin.generated)
+    {
+        bin.particles = terrain.make_chunk(cx, cy);
+        bin.generated = true;
+    }
+    return bin;
+}
+*/
+
+/*
+Particle *World::get_particle(signed int x, signed int y)
 {
     signed int cx = x / CHUNK_SIZE;
     signed int cy = y / CHUNK_SIZE;
 
-    Particle *&particles = bins[cx][cy].particles;
-    if (!particles) {particles = terrain.make_chunk(cx, cy);}
-    return particles[x % CHUNK_SIZE + (y % CHUNK_SIZE) * CHUNK_SIZE];
+    Chunk &bin = get_bin(cx, cy);
+    if (bin.particles)
+    {
+        return bin.particles + x % CHUNK_SIZE + (y % CHUNK_SIZE) * CHUNK_SIZE;
+    }
+    else
+    {
+        return 0;
+    }
+}
+*/
+
+World::ProximityTestIterator World::query_particles(float x, float y, float rad)
+{
+    return World::ProximityTestIterator(this, x, y, rad);
+}
+
+World::ProximityTestIterator::ProximityTestIterator(World *world, float x, float y, float rad)
+    : world(world)
+    , x(x)
+    , y(y)
+    , rad(rad)
+    , bin_x((x - rad) / CHUNK_SIZE)
+    , bin_ex((x + rad) / CHUNK_SIZE)
+    , bin_sy((y - rad) / CHUNK_SIZE)
+    , bin_y(bin_sy)
+    , bin_ey((y + rad) / CHUNK_SIZE)
+    , bin(world->get_bin(bin_x, bin_y))
+    , bin_particles(bin->particles)
+    , bin_solids_i(bin->solids.begin())
+    , bin_solids_e(bin->solids.end())
+    , solid_particle_i(bin_solids_i->particles.begin())
+    , solid_particle_e(bin_solids_i->particles.end())
+{
+    particles_i = static_cast<unsigned int>(-1);
+
+    /*
+    unsigned int my = y - rad;
+
+
+    unsigned int particle_x = sqrt(rad * rad - (my + 1 - y)^2) + x;
+
+    unsigned int particle_sy = my - bin_y * CHUNK_SIZE;
+    particles_i = particle_sy * CHUNK_SIZE;
+    */
+}
+
+Particle *World::ProximityTestIterator::next()
+{
+    float dx, dy;
+
+    while (true)
+    {
+        particles_i++;
+        if (particles_i >= CHUNK_SIZE * CHUNK_SIZE)
+        {
+            if (solid_particle_i != solid_particle_e)
+            {
+                solid_particle_i++;
+            }
+            if (bin_solids_i != bin_solids_e)
+            {
+            }
+            bin_y++;
+            if (bin_y > bin_ey)
+            {
+                bin_x++;
+                if (bin_x > bin_ex) {return 0;}
+                bin_y = bin_sy;
+            }
+
+            bin_particles = world->get_bin(bin_x, bin_y).particles;
+            particles_i = 0;
+        }
+
+        dx = bin_x * CHUNK_SIZE + particle_i % CHUNK_SIZE;
+        dy = bin_y * CHUNK_SIZE + particle_i / CHUNK_SIZE;
+        if (dx * dx + dy * dy < rad * rad && bin_particles[particles_i].type)
+        {
+            return bin_particles + particle_i;
+        }
+    }
 }

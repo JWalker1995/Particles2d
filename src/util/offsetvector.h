@@ -23,7 +23,7 @@ public:
         {
             items.insert(items.begin(), offset - i, Type());
             offset = i;
-            return items[0];
+            return items.front();
         }
 
         i -= offset;

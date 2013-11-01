@@ -1,7 +1,7 @@
 #ifndef TERRAIN_H
 #define TERRAIN_H
 
-#include "world/particle.h"
+#include "world/cell.h"
 
 #include "util/random.h"
 #include "terrain/simplexnoise.h"
@@ -26,7 +26,7 @@ public:
         SimplexNoise *main;
     } noise;
 
-    Particle *make_chunk(signed int cx, signed int cy);
+    void make_cell(signed int x, signed int y, Cell &cell);
 };
 
 #endif // TERRAIN_H
