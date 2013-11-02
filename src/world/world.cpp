@@ -8,26 +8,6 @@ World::World(int seed, int version)
     root->neighbors[1] = 0;
     root->neighbors[2] = 0;
     root->neighbors[3] = 0;
-
-    GLubyte *data = new GLubyte[500 * 500 * 3];
-    int i = 0;
-    while (i < 500 * 500 * 3)
-    {
-        data[i] = rand() % 256;
-        i++;
-    }
-
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 500, 500, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 }
 
 void World::tick(float time)
@@ -53,28 +33,53 @@ void World::tick(float time)
     while (ci != dynamic_chunks.end())
     {
         Chunk* c = *ci;
+
+        if (c->particles.empty())
+        {
+            ci = dynamic_chunks.erase(ci);
+            continue;
+        }
+
         WeakSet<Particle*>::iterator pi = c->particles.begin();
         WeakSet<Particle*>::iterator pie = c->particles.end();
         while (pi != pie)
         {
             Particle *p = *pi;
+
             Solid* solid = p->solid;
             if (solid)
             {
+                // Get velocity from solid
                 float dx = p->x - solid->x;
                 float dy = p->y - solid->y;
 
                 p->vx = solid->vx - solid->sin_vr * dx + solid->cos_vr * dy;
                 p->vy = solid->vy - solid->cos_vr * dx + solid->sin_vr * dy;
-
-                p->x += p->vx;
-                p->y += p->vy;
             }
+
+            signed int old_x = p->x;
+            signed int old_y = p->y;
+
+            p->x += p->vx;
+            p->y += p->vy;
+
+            signed int new_x = p->x;
+            signed int new_y = p->y;
+
+            if (old_x != new_x || old_y != new_y)
+            {
+            }
+
             pi++;
         }
 
         ci++;
     }
+}
+
+void World::draw()
+{
+    view.draw();
 }
 
 void World::initialize_chunk(Chunk *chunk)

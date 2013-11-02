@@ -132,18 +132,7 @@ State *GameState::tick(float time)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    //glColor3f(1,1,1);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, world->get_texture());
-
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2i(0, 0);
-    glTexCoord2f(0, 1); glVertex2i(0, height);
-    glTexCoord2f(1, 1); glVertex2i(width, height);
-    glTexCoord2f(1, 0); glVertex2i(width, 0);
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
+    world->draw();
 
     return 0;
 }

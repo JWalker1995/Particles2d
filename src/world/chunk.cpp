@@ -65,3 +65,7 @@ Chunk *Chunk::neighbor(World *world, unsigned int i)
     chunk->neighbors[i ^ 3] = 0;
     return chunk;
 }
+
+void Chunk::set_pixel(signed int px, signed int py)
+{
+}

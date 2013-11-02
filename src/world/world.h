@@ -8,6 +8,7 @@
 #include "defs.h"
 #include "gl.h"
 
+#include "world/view.h"
 #include "terrain/terrain.h"
 #include "world/chunk.h"
 #include "world/solid.h"
@@ -22,8 +23,7 @@ public:
     World(int seed, int version);
 
     void tick(float time);
-
-    GLuint get_texture() {return tex;}
+    void draw();
 
     /*
     struct ProximityTestIterator
@@ -78,9 +78,11 @@ protected:
 
     //std::deque<Particle*> particles;
 
+
+    // TODO: shouldn't have to be a pointer
     Terrain *terrain;
 
-    GLuint tex;
+    View view;
 
     /*
     Particle queries:

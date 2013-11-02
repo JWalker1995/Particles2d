@@ -2,6 +2,7 @@
 #define CHUNK_H
 
 #include "defs.h"
+#include "gl.h"
 
 #include "world/world.h"
 #include "world/cell.h"
@@ -27,10 +28,14 @@ struct Chunk
 
     WeakSet<Particle*> particles;
 
+    GLuint tex;
+
     // up, down, left, right
     Chunk *neighbors[4];
 
     Chunk *neighbor(World *world, unsigned int i);
+
+    void set_pixel(signed int px, signed int py);
 
 public:
     void *operator new(std::size_t s)
