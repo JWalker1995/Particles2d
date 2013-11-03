@@ -15,7 +15,7 @@ struct Particle
     Solid *solid = 0;
     float d;
 
-    char type;
+    const ParticleType *type;
 
     static ParticleType types[2];
 };

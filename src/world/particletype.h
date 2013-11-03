@@ -3,12 +3,16 @@
 
 struct ParticleType
 {
-    ParticleType();
+    ParticleType(const float mass, const unsigned char r, const unsigned char g, const unsigned char b);
 
-    float mass;
+    const float mass;
 
-    static const ParticleType *air;
+    const unsigned char r;
+    const unsigned char g;
+    const unsigned char b;
+
     static const ParticleType *dirt;
+    static const ParticleType *rock;
 };
 
 #endif // PARTICLETYPE_H

@@ -72,7 +72,7 @@ protected:
     WeakSet<Solid*> solids;
 
     Chunk *root;
-    WeakSet<Chunk*> dynamic_chunks;
+    WeakSet<Chunk*> active_chunks;
 
     //OffsetVector<OffsetVector<Cell>> cells;
 

@@ -20,25 +20,21 @@ Terrain::~Terrain()
 
 void Terrain::make_chunk(Chunk *chunk)
 {
-    float ax = chunk->cx * CHUNK_SIZE;
-    float ay = chunk->cy * CHUNK_SIZE;
-    float bx = ax + CHUNK_SIZE;
-    float by = ay + CHUNK_SIZE;
+    float ex = chunk->x + CHUNK_SIZE;
+    float ey = chunk->y + CHUNK_SIZE;
 
     Cell *cell = chunk->cells;
 
-    float y = ay;
-    while (y < by)
+    float y = chunk->y;
+    while (y < ey)
     {
-        float x = ax;
-        while (x < bx)
+        float x = chunk->x;
+        while (x < ex)
         {
-            float val = noise.main->octave_noise_2d(1, 0.5, 0.1, x, y) - y / 4.0;
+            float val = noise.main->octave_noise_2d(1, 0.5, 0.1, x, y) + (y - 128.0f) / 16.0f;
             if (val < 0.0)
             {
-                cell->state = Cell::t_static;
-                cell->temp = 0.0f;
-                cell->type = ParticleType::air;
+                cell->state = Cell::t_air;
             }
             else
             {

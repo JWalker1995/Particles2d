@@ -8,11 +8,24 @@ World::World(int seed, int version)
     root->neighbors[1] = 0;
     root->neighbors[2] = 0;
     root->neighbors[3] = 0;
+
+    Particle *p = new Particle();
+
+    p->x = 32.0f;
+    p->y = 16.0f;
+    p->vx = 0.0f;
+    p->vy = 0.0f;
+
+    p->solid = 0;
+    p->type = ParticleType::rock;
+
+    root->particles.insert(p);
+    active_chunks.insert(root);
 }
 
 void World::tick(float time)
 {
-    float ay = GRAVITY / time;
+    float ay = GRAVITY * time;
 
     WeakSet<Solid*>::iterator si = solids.begin();
     while (si != solids.end())
@@ -29,14 +42,14 @@ void World::tick(float time)
         si++;
     }
 
-    WeakSet<Chunk*>::iterator ci = dynamic_chunks.begin();
-    while (ci != dynamic_chunks.end())
+    WeakSet<Chunk*>::iterator ci = active_chunks.begin();
+    while (ci != active_chunks.end())
     {
         Chunk* c = *ci;
 
         if (c->particles.empty())
         {
-            ci = dynamic_chunks.erase(ci);
+            ci = active_chunks.erase(ci);
             continue;
         }
 
@@ -56,6 +69,12 @@ void World::tick(float time)
                 p->vx = solid->vx - solid->sin_vr * dx + solid->cos_vr * dy;
                 p->vy = solid->vy - solid->cos_vr * dx + solid->sin_vr * dy;
             }
+            else
+            {
+                p->vx *= DAMPING;
+                p->vy *= DAMPING;
+                p->vy += ay;
+            }
 
             signed int old_x = p->x;
             signed int old_y = p->y;
@@ -68,6 +87,43 @@ void World::tick(float time)
 
             if (old_x != new_x || old_y != new_y)
             {
+                Chunk *nc = c;
+                if (new_x < 0) {nc = nc->neighbor(this, Chunk::neighbor_left);}
+                else if (new_x > CHUNK_SIZE) {nc = nc->neighbor(this, Chunk::neighbor_right);}
+                if (new_y < 0) {nc = nc->neighbor(this, Chunk::neighbor_up);}
+                else if (new_y > CHUNK_SIZE) {nc = nc->neighbor(this, Chunk::neighbor_down);}
+
+                Cell *cl = nc->cells + old_x + old_y * CHUNK_SIZE;
+                Cell *ncl = nc->cells + new_x + new_y * CHUNK_SIZE;
+                if (ncl->state == Cell::t_air)
+                {
+                    view.update_pixel(c->x + old_x, c->y + old_y, 0, 0, 0);
+                    view.update_pixel(c->x + new_x, c->y + new_y, p->type->r, p->type->g, p->type->b);
+
+                    cl->state = Cell::t_air;
+                    ncl->state = Cell::t_dynamic;
+                    ncl->particle = p;
+                }
+                else if (ncl->state == Cell::t_static)
+                {
+                    std::cout << "collision" << std::endl;
+                }
+
+                if (nc != c)
+                {
+                    if (nc->particles.empty())
+                    {
+                        active_chunks.insert(nc);
+                    }
+
+                    pi = c->particles.erase(pi);
+                    nc->particles.insert(p);
+
+                    if (c->particles.empty())
+                    {
+                        ci = active_chunks.erase(ci);
+                    }
+                }
             }
 
             pi++;
@@ -85,6 +141,29 @@ void World::draw()
 void World::initialize_chunk(Chunk *chunk)
 {
     terrain->make_chunk(chunk);
+
+    Cell *cell = chunk->cells;
+    Cell *cell_e = chunk->cells + CHUNK_SIZE * CHUNK_SIZE;
+
+    signed int x = chunk->x;
+    signed int y = chunk->y;
+
+    while (cell < cell_e)
+    {
+        if (cell->state == Cell::t_static)
+        {
+            view.update_pixel(x, y, cell->type->r, cell->type->g, cell->type->b);
+        }
+
+        x++;
+        if (x % CHUNK_SIZE == 0)
+        {
+            x = 0;
+            y++;
+        }
+
+        cell++;
+    }
 }
 
 /*

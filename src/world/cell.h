@@ -18,7 +18,7 @@ struct Cell
 		Particle *particle;
 	};
 	float temp;
-    enum {t_null, t_static, t_dynamic} state = t_null;
+    enum {t_air, t_static, t_dynamic} state = t_air;
 };
 
 #endif // CELL_H

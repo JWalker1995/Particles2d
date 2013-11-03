@@ -14,10 +14,10 @@ class World;
 struct Chunk
 {
     Chunk() {}
-    Chunk(World *world, signed int cx, signed int cy);
+    Chunk(World *world, signed int x, signed int y);
 
-	signed int cx;
-	signed int cy;
+    signed int x;
+    signed int y;
 
 	/*
 	float x;
@@ -30,10 +30,10 @@ struct Chunk
 
     GLuint tex;
 
-    // up, down, left, right
+    enum Neighbor {neighbor_up = 0, neighbor_down = 1, neighbor_left = 2, neighbor_right = 3};
     Chunk *neighbors[4];
 
-    Chunk *neighbor(World *world, unsigned int i);
+    Chunk *neighbor(World *world, Neighbor i);
 
     void set_pixel(signed int px, signed int py);
 
@@ -49,7 +49,7 @@ public:
 		}
 
 		allocated++;
-		return chunks.back() + next_chunk;
+        return chunks.back() + next_chunk++;
 	}
 
 	// Most chunks won't be de-allocated until the end of the program.
@@ -64,6 +64,7 @@ public:
 				delete[] *i;
 				i++;
 			}
+            chunks.clear();
 			next_chunk = CHUNK_ALLOC_SIZE;
 		}
 	}

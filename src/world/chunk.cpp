@@ -6,33 +6,29 @@ unsigned int Chunk::next_chunk = CHUNK_ALLOC_SIZE;
 unsigned int Chunk::allocated = 0;
 
 Chunk::Chunk(World *world, signed int cx, signed int cy)
-    : cx(cx)
-    , cy(cy)
+    : x(cx)
+    , y(cy)
 {
     world->initialize_chunk(this);
 }
 
-Chunk *Chunk::neighbor(World *world, unsigned int i)
+Chunk *Chunk::neighbor(World *world, Neighbor i)
 {
     if (neighbors[i]) {return neighbors[i];}
 
     // Calculate target cx and cy.
-    signed int tcx = cx;
-    signed int tcy = cy;
+    signed int tcx = x;
+    signed int tcy = y;
     switch (i)
     {
-    case 0:
-        // Up
-        tcy--; break;
-    case 1:
-        // Down
-        tcy++; break;
-    case 2:
-        // Left
-        tcx--; break;
-    case 3:
-        // Right
-        tcy++; break;
+    case neighbor_up:
+        tcy -= CHUNK_SIZE; break;
+    case neighbor_down:
+        tcy += CHUNK_SIZE; break;
+    case neighbor_left:
+        tcx -= CHUNK_SIZE; break;
+    case neighbor_right:
+        tcx += CHUNK_SIZE; break;
     }
 
     // Loop through each chunk.
@@ -42,10 +38,11 @@ Chunk *Chunk::neighbor(World *world, unsigned int i)
     while (ci != chunks.end())
     {
         Chunk *chunk = *ci;
-        Chunk *chunk_e = chunk + CHUNK_ALLOC_SIZE;
+        ci++;
+        Chunk *chunk_e = chunk + (ci != chunks.end() ? CHUNK_ALLOC_SIZE : next_chunk);
         while (chunk < chunk_e)
         {
-            if (chunk->cx == tcx && chunk->cy == tcy)
+            if (chunk->x == tcx && chunk->y == tcy)
             {
                 neighbors[i] = chunk;
                 chunk->neighbors[i ^ 1] = this;
@@ -53,7 +50,6 @@ Chunk *Chunk::neighbor(World *world, unsigned int i)
             }
             chunk++;
         }
-        ci++;
     }
 
     // If there are no chunks at the target cx and cy, make one.
