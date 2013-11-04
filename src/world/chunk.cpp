@@ -5,9 +5,9 @@ std::vector<Chunk*> Chunk::chunks;
 unsigned int Chunk::next_chunk = CHUNK_ALLOC_SIZE;
 unsigned int Chunk::allocated = 0;
 
-Chunk::Chunk(World *world, signed int cx, signed int cy)
-    : x(cx)
-    , y(cy)
+Chunk::Chunk(World *world, signed int x, signed int y)
+    : x(x)
+    , y(y)
 {
     world->initialize_chunk(this);
 }

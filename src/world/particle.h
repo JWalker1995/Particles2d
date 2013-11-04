@@ -13,7 +13,6 @@ struct Particle
     float vy;
 
     Solid *solid = 0;
-    float d;
 
     const ParticleType *type;
 

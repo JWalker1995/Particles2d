@@ -21,6 +21,4 @@
 // The target seconds per frame.
 #define TARGET_SPF 0.02
 
-typedef float Scalar;
-
 #endif // DEFS_H
