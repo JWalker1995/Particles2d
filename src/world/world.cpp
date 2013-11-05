@@ -28,7 +28,8 @@ void World::tick(float time)
     float ay = GRAVITY * time;
 
     WeakSet<Solid*>::iterator si = solids.begin();
-    while (si != solids.end())
+    WeakSet<Solid*>::iterator sie = solids.end();
+    while (si != sie)
     {
         Solid *s = *si;
         s->vx *= DAMPING;
@@ -43,13 +44,14 @@ void World::tick(float time)
     }
 
     WeakSet<Chunk*>::iterator ci = active_chunks.begin();
-    while (ci != active_chunks.end())
+    WeakSet<Chunk*>::iterator cie = active_chunks.end();
+    while (ci != cie)
     {
         Chunk* c = *ci;
 
         if (c->particles.empty())
         {
-            ci = active_chunks.erase(ci);
+            active_chunks.erase(ci, cie);
             continue;
         }
 
@@ -93,7 +95,7 @@ void World::tick(float time)
                 if (new_y < 0) {nc = nc->neighbor(this, Chunk::neighbor_up);}
                 else if (new_y > CHUNK_SIZE) {nc = nc->neighbor(this, Chunk::neighbor_down);}
 
-                Cell *cl = nc->cells + old_x + old_y * CHUNK_SIZE;
+                //Cell *cl = c->cells + old_x + old_y * CHUNK_SIZE;
                 Cell *ncl = nc->cells + new_x + new_y * CHUNK_SIZE;
                 if (ncl->state == Cell::t_air)
                 {
@@ -106,22 +108,78 @@ void World::tick(float time)
                 }
                 else if (ncl->state == Cell::t_static)
                 {
-                    std::cout << "collision" << std::endl;
+                    std::cout << "static collision" << std::endl;
+
+                    // TODO: Should calculate new velocity from the surface normal
+                    p->vx = -p->vx;
+                    p->vy = -p->vy;
+
+                    p->x += p->vx;
+                    p->y += p->vy;
+
+                    new_x = p->x;
+                    new_y = p->y;
+                }
+                else if (ncl->state == Cell::t_dynamic)
+                {
+                    // Bounce
+                    Particle *p2 = ncl->particle;
+
+                    /*
+                    // Unoptimized, without mass
+                    float dx = p2->x - p->x;
+                    float dy = p2->y - p->y;
+                    float d = sqrt(dx * dx + dy * dy);
+                    dx /= d;
+                    dy /= d;
+
+                    float dvx = p2->vx - p->vx;
+                    float dvy = p2->vy - p->vy;
+
+                    float i = dvx * dx + dvy * dy;
+                    float ix = dx * i;
+                    float iy = dy * i;
+                    */
+
+                    float dx = p2->x - p->x;
+                    float dy = p2->y - p->y;
+                    float d2 = dx * dx + dy * dy;
+
+                    float dvx = p2->vx - p->vx;
+                    float dvy = p2->vy - p->vy;
+
+                    float i = (dvx * dx + dvy * dy) / (d2 * (p->type->mass + p2->type->mass));
+                    float ix = dx * i;
+                    float iy = dy * i;
+
+                    p->vx -= ix * p2->type->mass;
+                    p->vy -= iy * p2->type->mass;
+
+                    if (p->solid)
+                    {
+                        p->solid->apply_impulse(p->x, p->y, ix * p->type->mass, py * p->type->mass);
+                    }
+                    else
+                    {
+                        p2->vx += ix * p->type->mass;
+                        p2->vy += ix * p->type->mass;
+                    }
                 }
 
                 if (nc != c)
                 {
                     if (nc->particles.empty())
                     {
-                        active_chunks.insert(nc);
+                        active_chunks.insert(nc, ci, cie);
                     }
 
-                    pi = c->particles.erase(pi);
+                    c->particles.erase(pi);
                     nc->particles.insert(p);
 
                     if (c->particles.empty())
                     {
-                        ci = active_chunks.erase(ci);
+                        active_chunks.erase(ci);
+                        ci--;
                     }
                 }
             }

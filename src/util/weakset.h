@@ -13,22 +13,25 @@ public:
     {
         arr.push_back(item);
     }
-
-    iterator insert(Type &item, iterator i)
+    template <typename... Args>
+    void insert(Type &item, iterator &i, Args... args)
     {
         int n = i - arr.begin();
-        arr.push_back(item);
-        return arr.begin() + n;
+        insert(item, args...);
+        i = arr.begin() + n;
     }
 
-    iterator erase(iterator i)
+    template <typename... Args>
+    void erase(iterator &i, Args... args)
     {
+        _erase(i, args...);
         *i = arr.back();
         arr.pop_back();
-        return i;
     }
 
     void shrink() {arr.shrink_to_fit();}
+
+    void clear() {arr.clear();}
 
     iterator begin() {return arr.begin();}
     iterator end() {return arr.end();}
@@ -38,6 +41,15 @@ public:
 
 protected:
     std::vector<Type> arr;
+
+private:
+    template <typename... Args>
+    void _erase(iterator &erased, iterator &i, Args... args)
+    {
+        if (i > erased) {i--;}
+        _erase(erased, args...);
+    }
+    void _erase(iterator &erased) {}
 };
 
 #endif // WEAKSET_H
