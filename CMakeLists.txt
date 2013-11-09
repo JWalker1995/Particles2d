@@ -31,6 +31,7 @@ set(Particles2d_headers
 	src/state/gamestate.h
 	src/terrain/simplexnoise.h
 	src/terrain/terrain.h
+	src/util/fastapprox.h
 	src/util/logger.h
 	src/util/random.h
 	src/util/offsetvector.h

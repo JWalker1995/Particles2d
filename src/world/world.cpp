@@ -87,27 +87,77 @@ void World::tick(float time)
             signed int new_x = p->x;
             signed int new_y = p->y;
 
-            if (old_x != new_x || old_y != new_y)
-            {
-                Chunk *nc = c;
-                if (new_x < 0) {nc = nc->neighbor(this, Chunk::neighbor_left);}
-                else if (new_x > CHUNK_SIZE) {nc = nc->neighbor(this, Chunk::neighbor_right);}
-                if (new_y < 0) {nc = nc->neighbor(this, Chunk::neighbor_up);}
-                else if (new_y > CHUNK_SIZE) {nc = nc->neighbor(this, Chunk::neighbor_down);}
+            signed int dx = abs(new_x - old_x);
+            signed int dy = abs(new_y - old_y);
 
-                //Cell *cl = c->cells + old_x + old_y * CHUNK_SIZE;
-                Cell *ncl = nc->cells + new_x + new_y * CHUNK_SIZE;
-                if (ncl->state == Cell::t_air)
+            signed int sx = old_x < new_x ? 1 : -1;
+            signed int sy = old_y < new_y ? 1 : -1;
+
+            signed int err = dx - dy;
+
+            signed int x = old_x;
+            signed int y = old_y;
+
+            while (true)
+            {
+                // TODO: optimization
+                signed int e2 = err * 2;
+                if (e2 > -dy)
                 {
+                    err -= dy;
+                    x += sx;
+                }
+
+                if (!(x == new_x && y == new_y) && e2 < dx)
+                {
+                    err += dx;
+                    y += sy;
+                }
+
+                Chunk *nc = c;
+                unsigned int i = new_x + new_y * CHUNK_SIZE;
+                if (i >= CHUNK_SIZE * CHUNK_SIZE)
+                {
+                    if (new_x < 0)
+                        {nc = nc->neighbor(this, Chunk::neighbor_left); i += CHUNK_SIZE;}
+                    else if (new_x > CHUNK_SIZE)
+                        {nc = nc->neighbor(this, Chunk::neighbor_right); i -= CHUNK_SIZE;}
+                    if (new_y < 0)
+                        {nc = nc->neighbor(this, Chunk::neighbor_up); i += CHUNK_SIZE * CHUNK_SIZE;}
+                    else if (new_y > CHUNK_SIZE)
+                        {nc = nc->neighbor(this, Chunk::neighbor_down); i -= CHUNK_SIZE * CHUNK_SIZE;}
+                }
+
+                if (nc != c)
+                {
+                    if (nc->particles.empty())
+                    {
+                        active_chunks.insert(nc, ci, cie);
+                    }
+
+                    c->particles.erase(pi);
+                    nc->particles.insert(p);
+
+                    if (c->particles.empty())
+                    {
+                        active_chunks.erase(ci);
+                        ci--;
+                    }
+                }
+
+                Cell *ncl = nc->cells + i;
+                switch (ncl->state)
+                {
+                case Cell::t_air:
                     view.update_pixel(c->x + old_x, c->y + old_y, 0, 0, 0);
                     view.update_pixel(c->x + new_x, c->y + new_y, p->type->r, p->type->g, p->type->b);
 
                     cl->state = Cell::t_air;
                     ncl->state = Cell::t_dynamic;
                     ncl->particle = p;
-                }
-                else if (ncl->state == Cell::t_static)
-                {
+                    break;
+
+                case Cell::t_static:
                     std::cout << "static collision" << std::endl;
 
                     // TODO: Should calculate new velocity from the surface normal
@@ -119,11 +169,12 @@ void World::tick(float time)
 
                     new_x = p->x;
                     new_y = p->y;
-                }
-                else if (ncl->state == Cell::t_dynamic)
-                {
-                    // Bounce
+                    break;
+
+                case Cell::t_dynamic:
                     Particle *p2 = ncl->particle;
+
+                    // Bounce
 
                     /*
                     // Unoptimized, without mass
@@ -164,23 +215,13 @@ void World::tick(float time)
                         p2->vx += ix * p->type->mass;
                         p2->vy += ix * p->type->mass;
                     }
+                    break;
                 }
 
-                if (nc != c)
+                if (x == new_x && y == new_y)
                 {
-                    if (nc->particles.empty())
-                    {
-                        active_chunks.insert(nc, ci, cie);
-                    }
-
-                    c->particles.erase(pi);
-                    nc->particles.insert(p);
-
-                    if (c->particles.empty())
-                    {
-                        active_chunks.erase(ci);
-                        ci--;
-                    }
+                    set_particle(x, y);
+                    break;
                 }
             }
 
@@ -189,6 +230,8 @@ void World::tick(float time)
 
         ci++;
     }
+
+    cur_timestep++;
 }
 
 void World::draw()
