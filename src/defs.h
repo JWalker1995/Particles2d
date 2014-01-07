@@ -18,7 +18,10 @@
 #define DAMPING 0.99f
 #define ANGULAR_DAMPING 0.99f
 
+#define ROTATION_BINS 360
+
 // The target seconds per frame.
 #define TARGET_SPF 0.02
+
 
 #endif // DEFS_H
