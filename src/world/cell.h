@@ -7,18 +7,22 @@ struct Cell
 {
 	union
 	{
-		// t_static
+		// state_static:
 		// char type;
         const ParticleType *type;
 			// Mass
 			// Color
 			// Sleep time
 
-		// t_dynamic
-		Particle *particle;
+		// state_solid:
+		Solid *solid;
+		Particle *particle;		
+
+		// state_particle:
+		Particle particle;
 	};
 	float temp;
-    enum {t_air, t_static, t_dynamic} state = t_air;
+    enum {state_air, state_static, state_solid, state_particle} state = state_air;
 };
 
 #endif // CELL_H

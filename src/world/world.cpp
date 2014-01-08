@@ -26,6 +26,96 @@ World::World(int seed, int version)
 void World::tick(float time)
 {
     float ay = GRAVITY * time;
+    float damping = pow(DAMPING, time);
+    float angular_damping = pow(ANGULAR_DAMPING, time);
+
+    WeakSet<Solid*>::iterator si = solids.begin();
+    WeakSet<Solid*>::iterator sie = solids.end();
+    while (si != sie)
+    {
+        Solid *s = *si;
+
+        // TODO: Remove sqrt
+        float steps = floor(s->max_rad * s->vr + sqrt(s->vx * s->vx + s->vy * s->vy));
+        
+        s->vx *= damping;
+        s->vy *= damping;
+        s->vr *= angular_damping;
+
+        s->vy += ay;
+
+        float vx = s->vx / steps;
+        float vy = s->vy / steps;
+        float vr = s->vr / steps;
+
+        unsigned int i = steps;
+        while (i--)
+        {
+            s->x += vx;
+            s->y += vy;
+            s->r += vr;
+
+            float sin_r = sin(s->r);
+            float cos_r = cos(s->r);
+
+            Chunk *chunk = s->chunk;
+
+            const std::vector<std::uint16_t> &cps = s->get_collision_particles();
+            std::vector<std::uint16_t>::const_iterator cpsi = cps.cbegin();
+            while (cpsi != cps.cend())
+            {
+                unsigned int i = *cpsi;
+
+                signed int x = s->x + s->particles[i]->rx * cos_r - s->particles[i]->ry * sin_r;
+                signed int y = s->y + s->particles[i]->rx * sin_r + s->particles[i]->ry * cos_r;
+
+                signed int cx = (x / CHUNK_SIZE) * CHUNK_SIZE;
+                signed int cy = (y / CHUNK_SIZE) * CHUNK_SIZE;
+
+                if (cx != chunk->x || cy != chunk->y)
+                {
+                    while (cx < chunk->x)
+                    {
+                        chunk = chunk->neighbor(this, Chunk::neighbor_left);
+                        cx += CHUNK_SIZE;
+                    }
+                    while (cx > chunk->x)
+                    {
+                        chunk = chunk->neighbor(this, Chunk::neighbor_right);
+                        cx -= CHUNK_SIZE;
+                    }
+                    while (cy < chunk->y)
+                    {
+                        chunk = chunk->neighbor(this, Chunk::neighbor_up);
+                        cy += CHUNK_SIZE;
+                    }
+                    while (cx > chunk->x)
+                    {
+                        chunk = chunk->neighbor(this, Chunk::neighbor_down);
+                        cy -= CHUNK_SIZE;
+                    }
+                }
+
+                Cell *cell = chunk->cells + (x - cx) + (y - cy) * CHUNK_SIZE;
+
+                switch (cell->state)
+                {
+                case Cell::state_air:
+                    break;
+                case Cell::state_static:
+                    break;
+                case Cell::state_solid:
+                    break;
+                case Cell::state_particle:
+                    break;
+                }
+
+                cpsi++;
+            }
+        }
+
+        si++;
+    }
 
     WeakSet<Solid*>::iterator si = solids.begin();
     WeakSet<Solid*>::iterator sie = solids.end();

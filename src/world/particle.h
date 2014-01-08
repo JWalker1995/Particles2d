@@ -6,13 +6,11 @@
 
 struct Particle
 {
-    float x;
-    float y;
+    float rx;
+    float ry;
 
     float vx;
     float vy;
-
-    Solid *solid = 0;
 
     const ParticleType *type;
 

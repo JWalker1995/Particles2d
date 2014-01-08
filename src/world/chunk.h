@@ -35,6 +35,8 @@ struct Chunk
 
     Chunk *neighbor(World *world, Neighbor i);
 
+    Chunk *find_chunk(signed int tx, signed int ty);
+
     void set_pixel(signed int px, signed int py);
 
 public:

@@ -31,9 +31,33 @@ Chunk *Chunk::neighbor(World *world, Neighbor i)
         tcx += CHUNK_SIZE; break;
     }
 
+    // Try to find a chunk that matches the target cx and cy. If found, set neighbors and return.
+    Chunk *chunk = find_chunk(tcx, tcy);
+
+    if (chunk)
+    {
+        chunk->neighbors[i ^ 1] = this;
+    }
+    else
+    {
+        // If there are no chunks at the target cx and cy, make one.
+        chunk = new Chunk(world, tcx, tcy);
+        chunk->neighbors[i ^ 0] = 0;
+        chunk->neighbors[i ^ 1] = this;
+        chunk->neighbors[i ^ 2] = 0;
+        chunk->neighbors[i ^ 3] = 0;
+    }
+
+    neighbors[i] = chunk;
+
+    return chunk;
+}
+
+Chunk *Chunk::find_chunk(signed int tx, signed int ty)
+{
     // Loop through each chunk.
-    // If we find one that matches the target cx and cy, set neighbors and return.
-    // TODO: reverse iterating (might be faster because newer chunks are more likely to be closer).
+    // TODO: Reverse iterating (might be faster because newer chunks are more likely to be closer).
+    // TODO: Intelligent pathfinding algorithm
     std::vector<Chunk*>::iterator ci = chunks.begin();
     while (ci != chunks.end())
     {
@@ -42,24 +66,15 @@ Chunk *Chunk::neighbor(World *world, Neighbor i)
         Chunk *chunk_e = chunk + (ci != chunks.end() ? CHUNK_ALLOC_SIZE : next_chunk);
         while (chunk < chunk_e)
         {
-            if (chunk->x == tcx && chunk->y == tcy)
+            if (chunk->x == tx && chunk->y == ty)
             {
-                neighbors[i] = chunk;
-                chunk->neighbors[i ^ 1] = this;
                 return chunk;
             }
             chunk++;
         }
     }
 
-    // If there are no chunks at the target cx and cy, make one.
-    Chunk *chunk = new Chunk(world, tcx, tcy);
-    neighbors[i] = chunk;
-    chunk->neighbors[i ^ 0] = 0;
-    chunk->neighbors[i ^ 1] = this;
-    chunk->neighbors[i ^ 2] = 0;
-    chunk->neighbors[i ^ 3] = 0;
-    return chunk;
+    return 0;
 }
 
 void Chunk::set_pixel(signed int px, signed int py)

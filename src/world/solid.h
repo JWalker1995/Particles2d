@@ -29,67 +29,87 @@ struct Solid
 
     float mass;
 
+    float max_rad;
+
+    Chunk *chunk;
+
     std::vector<Particle> particles;
 
-    const std::vector<std::uint16_t> &get_collision_particles(float rotation)
+    const std::vector<std::uint16_t> &get_collision_particles()
     {
-        unsigned int bin = rotation * ROTATION_BINS / M_2_PI;
+        unsigned int bin = r * ROTATION_BINS / M_2_PI;
         std::vector<std::uint16_t> &res = collision_particles[bin];
 
         if (res.empty())
         {
             assert(particles.size() <= 0x10000);
 
-            struct Point
+            unsigned int bin = r * ROTATION_BINS / M_2_PI;
+            assert(bin < ROTATION_BINS);
+
+            double rot = min_ang + M_PI / ROTATION_BINS;
+
+            float sin_rot = sin(rot);
+            float cos_rot = cos(rot);
+
+            float slope = cos_rot / sin_rot;
+
+            struct Shadow
             {
-                float x;
-                float y;
+                float b1;
+                float b2;
+
                 std::uint16_t i;
             };
 
-            WeakSet<Point> rotated_pts;
-
-            double rot = bin * M_2_PI / ROTATION_BINS;
-
-            float sin_rot = sin(rotation);
-            float cos_rot = cos(rotation);
-
-            float slope = cos_rot / sin_rot;
+            WeakSet<Shadow> rotated_pts;
 
             std::uint16_t i = 0;
             while (i < particles.size())
             {
-                Point p;
-                p.x = particles[i]->x * cos_rot - particles[i]->y * sin_rot;
-                p.y = particles[i]->x * sin_rot + particles[i]->y * cos_rot;
+                float x = particles[i]->rx * cos_rot - particles[i]->ry * sin_rot;
+                float y = particles[i]->rx * sin_rot + particles[i]->ry * cos_rot;
+
+                Shadow p;
+                p.b1 = y - x * slope;
+                p.b2 = y + x * slope;
                 p.i = i;
 
                 rotated_pts.insert(p);
                 i++;
             }
 
-            // Could use optimization
             WeakSet::iterator j = rotated_pts.begin();
             while (j != rotated_pts.end())
             {
-                bool inc = true;
-
                 WeakSet::iterator k = rotated_pts.begin();
                 while (k != rotated_pts.end())
                 {
-                    float b1 = k->y + k->x * slope;
-                    float b2 = k->y - k->x * slope;
-                    if (j->y < b1 - slope * j->x && j->y < b2 + slope * j->x)
+                    if (j->b1 < k->b1 && j->b2 < k->b2)
                     {
-                        rotated_pts.erase(j);
-                        inc = false;
                         break;
                     }
                     k++;
                 }
-                j += inc;
+
+                if (k != rotated_pts.end())
+                {
+                    rotated_pts.erase(j);
+                }
+                else
+                {
+                    j++;
+                }
+            }
+
+            j = rotated_pts.begin();
+            while (j != rotated_pts.end())
+            {
+                res.push_back(j->i);
+                j++;
             }
         }
+
         return res;
     }
 
