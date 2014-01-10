@@ -58,6 +58,14 @@ void World::tick(float time)
             float sin_r = sin(s->r);
             float cos_r = cos(s->r);
 
+            Solid::RotationCache rc = s->get_rotation_cache();
+
+            signed int aabb[4];
+            aabb[Direction::up   ] = s->y + rc.aabb[Direction::up   ];
+            aabb[Direction::down ] = s->y + rc.aabb[Direction::down ];
+            aabb[Direction::left ] = s->x + rc.aabb[Direction::left ];
+            aabb[Direction::right] = s->x + rc.aabb[Direction::right];
+
             Chunk *chunk = s->chunk;
 
             const std::vector<std::uint16_t> &cps = s->get_collision_particles();

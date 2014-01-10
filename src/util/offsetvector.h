@@ -10,7 +10,7 @@ public:
     OffsetVector()
     {}
 
-    Type &operator[](typename std::deque<Type>::size_type i)
+    Type &operator[](signed int i)
     {
         if (items.empty())
         {
@@ -36,7 +36,7 @@ public:
     }
 
 protected:
-    typename std::deque<Type>::size_type offset;
+    signed int offset;
     std::deque<Type> items;
 };
 

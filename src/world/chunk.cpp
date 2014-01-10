@@ -12,7 +12,7 @@ Chunk::Chunk(World *world, signed int x, signed int y)
     world->initialize_chunk(this);
 }
 
-Chunk *Chunk::neighbor(World *world, Neighbor i)
+Chunk *Chunk::neighbor(World *world, Direction i)
 {
     if (neighbors[i]) {return neighbors[i];}
 
@@ -21,13 +21,13 @@ Chunk *Chunk::neighbor(World *world, Neighbor i)
     signed int tcy = y;
     switch (i)
     {
-    case neighbor_up:
+    case up:
         tcy -= CHUNK_SIZE; break;
-    case neighbor_down:
+    case down:
         tcy += CHUNK_SIZE; break;
-    case neighbor_left:
+    case left:
         tcx -= CHUNK_SIZE; break;
-    case neighbor_right:
+    case right:
         tcx += CHUNK_SIZE; break;
     }
 

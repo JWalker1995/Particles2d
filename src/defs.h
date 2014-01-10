@@ -13,6 +13,10 @@
 // The number of chunks to allocate when more are needed.
 #define CHUNK_ALLOC_SIZE 256
 
+// The size of the root world tree node in pixels. Must be a power of 2.
+#define WORLD_TREE_ROOT_SIZE 256
+
+
 // Simulation gravity and friction.
 #define GRAVITY 0.1f
 #define DAMPING 0.99f

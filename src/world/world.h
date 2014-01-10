@@ -12,7 +12,7 @@
 #include "terrain/terrain.h"
 #include "world/chunk.h"
 #include "world/solid.h"
-//#include "util/offsetvector.h"
+#include "util/offsetvector.h"
 #include "util/weakset.h"
 
 class Terrain;
@@ -83,6 +83,23 @@ protected:
     Terrain *terrain;
 
     View view;
+
+    struct Node
+    {
+        enum Contents {all_air, subdiv, defined};
+        Node *parent;
+
+        union
+        {
+            // subdiv
+            Node *children;
+
+            // defined
+            Particle *cells;
+        };
+    };
+
+    OffsetVector<OffsetVector<Node>> grid;
 
     /*
     Particle queries:

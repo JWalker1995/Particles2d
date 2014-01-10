@@ -7,6 +7,7 @@
 #include "world/world.h"
 #include "world/cell.h"
 
+#include "util/direction.h"
 #include "util/weakset.h"
 
 class World;
@@ -30,10 +31,9 @@ struct Chunk
 
     GLuint tex;
 
-    enum Neighbor {neighbor_up = 0, neighbor_down = 1, neighbor_left = 2, neighbor_right = 3};
     Chunk *neighbors[4];
 
-    Chunk *neighbor(World *world, Neighbor i);
+    Chunk *neighbor(World *world, Direction i);
 
     Chunk *find_chunk(signed int tx, signed int ty);
 
