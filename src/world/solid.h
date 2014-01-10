@@ -42,15 +42,28 @@ struct Solid
         float aabb[4];
         std::vector<std::uint16_t> collision_particles;
         float collision_particles_aabb[4];
+
+        struct Strip
+        {
+            float heights[2];
+            std::vector<std::uint16_t> particles;
+        };
+
+        OffsetVector<Strip> strips;
     };
 
     const RotationCache &get_rotation_cache()
     {
-        // Normalize angle inside [0, 360)
-        r = fmod(r, 360.0f);
-        if (r < 0.0f) {r += 360.0f;}
+        // Normalize angle inside [0, pi)
+        r = fmod(r, M_PI * 2.0f);
+        if (r < 0.0f) {r += M_PI * 2.0f;}
 
-        unsigned int bin = r * ROTATION_BINS / M_2_PI;
+        bool flip = r >= M_PI;
+        if (flip) {r -= M_PI;}
+
+        unsigned int bin = r * ROTATION_BINS / M_PI_2;
+        assert(bin < ROTATION_BINS);
+
         RotationCache &res = rotation_caches[bin];
 
         if (res.collision_particles.empty())
@@ -63,65 +76,108 @@ struct Solid
             // Make sure the particle indexes will fit in a short
             assert(particles.size() <= 0x10000);
 
-            unsigned int bin = r * ROTATION_BINS / M_2_PI;
-            assert(bin < ROTATION_BINS);
+            // Calculate min and max rotation of bin
+            double rot1 = bin * M_PI_2 / ROTATION_BINS;
+            double rot2 = (bin + 1) * M_PI_2 / ROTATION_BINS;
 
-            double rot = bin * M_2_PI / ROTATION_BINS + M_PI / ROTATION_BINS;
-            // Right now, both the collision_particles and the aabb are only being calculated for this single angle.
-            // However, they should be calculated for the range of angles between bin * M_2_PI / ROTATION_BINS and bin * M_2_PI / ROTATION_BINS + M_2_PI / ROTATION_BINS.
+            float sin_rot1 = sin(rot1);
+            float cos_rot1 = cos(rot1);
+            float sin_rot2 = sin(rot2);
+            float cos_rot2 = cos(rot2);
 
-            float sin_rot = sin(rot);
-            float cos_rot = cos(rot);
+            float slope1 = cos_rot1 / sin_rot1;
+            float slope2 = cos_rot2 / sin_rot2;
 
+            // Clear aabb
             res.aabb[Direction::up   ] = 0.0f;
             res.aabb[Direction::down ] = 0.0f;
             res.aabb[Direction::left ] = 0.0f;
             res.aabb[Direction::right] = 0.0f;
 
-            float slope = cos_rot / sin_rot;
-
-            struct Shadow
+            struct RotatedParticle
             {
-                float x;
-                float y;
+                float x1;
+                float y1;
+                float x2;
+                float y2;
 
+                /*
                 float b1;
                 float b2;
+                */
 
                 std::uint16_t i;
             };
 
-            WeakSet<Shadow> rotated_pts;
+            WeakSet<RotatedParticle> rotated_particles;
 
             std::uint16_t i = 0;
             while (i < particles.size())
             {
                 // Translate particle
-                float px = particles[i]->rx * cos_rot - particles[i]->ry * sin_rot;
-                float py = particles[i]->rx * sin_rot + particles[i]->ry * cos_rot;
+                float px1 = particles[i]->rx * cos_rot1 - particles[i]->ry * sin_rot1;
+                float py1 = particles[i]->rx * sin_rot1 + particles[i]->ry * cos_rot1;
+                float px2 = particles[i]->rx * cos_rot2 - particles[i]->ry * sin_rot2;
+                float py2 = particles[i]->rx * sin_rot2 + particles[i]->ry * cos_rot2;
 
-                if (py < res.aabb[Direction::up   ]) {res.aabb[Direction::up   ] = py;}
-                if (py > res.aabb[Direction::down ]) {res.aabb[Direction::down ] = py;}
-                if (px < res.aabb[Direction::left ]) {res.aabb[Direction::left ] = px;}
-                if (px > res.aabb[Direction::right]) {res.aabb[Direction::right] = px;}
-
-                Shadow p;
-                p.x = px;
-                p.y = py;
+                RotatedParticle p;
+                p.x1 = px1;
+                p.y1 = py1;
+                p.x2 = px2;
+                p.y2 = py2;
+                /*
                 p.b1 = py - px * slope;
                 p.b2 = py + px * slope;
+                */
                 p.i = i;
 
-                rotated_pts.insert(p);
+                rotated_particles.insert(p);
+
+                // Guarantee px1 <= px2
+                if (px1 > px2) {std::swap(px1, px2);}
+
+                // Guarantee py1 <= py2
+                if (py1 > py2) {std::swap(py1, py2);}
+
+                // Add particle to aabb
+                if (py1 < res.aabb[Direction::up   ]) {res.aabb[Direction::up   ] = py1;}
+                if (py2 > res.aabb[Direction::down ]) {res.aabb[Direction::down ] = py2;}
+                if (px1 < res.aabb[Direction::left ]) {res.aabb[Direction::left ] = px1;}
+                if (px2 > res.aabb[Direction::right]) {res.aabb[Direction::right] = px2;}
+                /*
+                if (py1 < res.aabb[Direction::up   ]) {res.aabb[Direction::up   ] = py1;}
+                //if (py1 > res.aabb[Direction::down ]) {res.aabb[Direction::down ] = py1;}
+                if (px1 < res.aabb[Direction::left ]) {res.aabb[Direction::left ] = px1;}
+                //if (px1 > res.aabb[Direction::right]) {res.aabb[Direction::right] = px1;}
+                //if (py2 < res.aabb[Direction::up   ]) {res.aabb[Direction::up   ] = py2;}
+                if (py2 > res.aabb[Direction::down ]) {res.aabb[Direction::down ] = py2;}
+                //if (px2 < res.aabb[Direction::left ]) {res.aabb[Direction::left ] = px2;}
+                if (px2 > res.aabb[Direction::right]) {res.aabb[Direction::right] = px2;}
+                */
+
+                // Insert particle into strip(s)
+                signed int s1 = round((px1 - 0.5f) / STRIP_WIDTH);
+                signed int s2 = round((px2 + 0.5f) / STRIP_WIDTH);
+
+                while (s1 <= s2)
+                {
+                    RotationCache::Strip &s = res.strips[s1];
+                    if (py1 < s.heights[0]) {s.heights[0] = py1;}
+                    if (py2 > s.heights[1]) {s.heights[1] = py2;}
+                    s.particles.push_back(i);
+
+                    s1++;
+                }
 
                 i++;
             }
 
-            WeakSet::iterator j = rotated_pts.begin();
-            while (j != rotated_pts.end())
+            /*
+            WeakSet::iterator j = rotated_particles.begin();
+            while (j != rotated_particles.end())
             {
-                WeakSet::iterator k = rotated_pts.begin();
-                while (k != rotated_pts.end())
+                WeakSet::iterator k = rotated_particles.begin();
+                while (k != rotated_particles.end())
                 {
                     if (j->b1 < k->b1 && j->b2 < k->b2)
                     {
@@ -130,9 +186,9 @@ struct Solid
                     k++;
                 }
 
-                if (k != rotated_pts.end())
+                if (k != rotated_particles.end())
                 {
-                    rotated_pts.erase(j);
+                    rotated_particles.erase(j);
                 }
                 else
                 {
@@ -141,15 +197,15 @@ struct Solid
             }
 
             // There should always be at least one particle that collides
-            assert(!rotated_pts.empty());
+            assert(!rotated_particles.empty());
 
             res.collision_particles_aabb[Direction::up   ] = 0.0f;
             res.collision_particles_aabb[Direction::down ] = 0.0f;
             res.collision_particles_aabb[Direction::left ] = 0.0f;
             res.collision_particles_aabb[Direction::right] = 0.0f;
 
-            j = rotated_pts.begin();
-            while (j != rotated_pts.end())
+            j = rotated_particles.begin();
+            while (j != rotated_particles.end())
             {
                 res.collision_particles.push_back(j->i);
 
@@ -160,6 +216,7 @@ struct Solid
 
                 j++;
             }
+            */
         }
 
         return res;

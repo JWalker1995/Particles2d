@@ -3,6 +3,8 @@
 
 #include <vector>
 
+// Supports constant-time insertion and erasure. Makes no guarantees about duplicates.
+
 template <typename Type>
 class WeakSet
 {

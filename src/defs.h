@@ -17,12 +17,15 @@
 #define WORLD_TREE_ROOT_SIZE 256
 
 
+#define ROTATION_BINS 256
+
+#define STRIP_WIDTH 10.0f
+
+
 // Simulation gravity and friction.
 #define GRAVITY 0.1f
 #define DAMPING 0.99f
 #define ANGULAR_DAMPING 0.99f
-
-#define ROTATION_BINS 360
 
 // The target seconds per frame.
 #define TARGET_SPF 0.02
