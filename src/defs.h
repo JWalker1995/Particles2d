@@ -19,7 +19,9 @@
 
 #define ROTATION_BINS 256
 
-#define STRIP_WIDTH 10.0f
+#define STRIPE_WIDTH 16.0f
+
+#define MIN_STRIP_WIDTH 4.0f
 
 
 // Simulation gravity and friction.
