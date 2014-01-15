@@ -15,6 +15,7 @@ set(Particles2d_sources
 	src/state/gamestate.cpp
 	src/terrain/simplexnoise.cpp
 	src/terrain/terrain.cpp
+	src/world/broadphase.cpp
 	src/world/chunk.cpp
 	src/world/particletype.cpp
 	src/world/world.cpp
@@ -37,8 +38,11 @@ set(Particles2d_headers
 	src/util/random.h
 	src/util/offsetvector.h
 	src/util/weakset.h
+	src/world/aabb.h
+	src/world/broadphase.h
 	src/world/cell.h
 	src/world/chunk.h
+	src/world/object.h
 	src/world/particle.h
 	src/world/particletype.h
 	src/world/solid.h

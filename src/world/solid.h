@@ -7,20 +7,20 @@
 #include <algorithm>
 
 #include "defs.h"
-#include "world/particle.h"
+
+#include "object.h"
+#include "particle.h"
 
 #include "util/direction.h"
 #include "util/offsetvector.h"
 #include "util/weakset.h"
 
-struct Solid
+struct Solid : public Object
 {
     Solid()
     {
     }
 
-    float x;
-    float y;
     float r;
 
     float vx;
@@ -30,11 +30,7 @@ struct Solid
     float sin_vr;
     float cos_vr;
 
-    float mass;
-
-    float max_rad;
-
-    Chunk *chunk;
+    //Chunk *chunk;
 
     std::vector<Particle> particles;
 
@@ -54,6 +50,14 @@ struct Solid
 
         signed int stripe_offset;
         std::vector<Stripe> stripes;
+    };
+
+    struct Sector
+    {
+        float rad;
+        float tree_rad;
+
+        std::vector<std::uint16_t> particles;
     };
 
     const RotationCache &get_rotation_cache()
@@ -245,6 +249,98 @@ struct Solid
 
     static void collide(Solid *s1, Solid *s2)
     {
+        // TODO: Possible optimization: change int to char
+
+        bool collides(unsigned int sec1, unsigned int arc1, unsigned int sec2, unsigned int arc2)
+        {
+            return false;
+        };
+
+        void collide_sectors(unsigned int sec1, unsigned int sec2, unsigned int arc)
+        {
+            if (arc)
+            {
+                if (collides(sec1, arc, sec2, arc))
+                {
+                    if (collides(sec1, arc, sec2, arc / 2))
+                    {
+                        collide_sectors()
+                    }
+                }
+            }
+            else
+            {
+                s1->sectors[sec1]
+            }
+        };
+
+        unsigned int cont = 0;
+
+        unsigned int sector[2] = {0};
+        unsigned int arc = SOLID_SECTORS;
+
+        bool cur_s = 0;
+
+        while (true)
+        {
+            if (!collides(sector[cur_s], arc, sector[!cur_s], cur_s ? arc / 2 : arc))
+            {
+                sector[cur_s] += arc / 2;
+            }
+
+            /*
+
+            If 0:8 & 0:8 Then
+                If 0:8 & 0:4 Then
+                    Try 0:4 & 0:4
+                    If 0:8 & 4:8 Then
+                        Try 0:4 & 4:8
+                    End
+                Else
+                    Try 0:4 & 4:8
+                End
+            End
+            If 8:16 & 0:4 Then
+                Try 8:12 & 0:4
+            End
+            Try 8:12 & 4:8
+
+            */
+
+            if (collides(sector1, arc, sector2, arc))
+            {
+                if (collides(sector1, arc, sector2, arc / 2))
+                {
+                    arc /= 2;
+                    continue;
+                }
+                else
+                {
+                    sector2 += arc / 2;
+                    arc /= 2;
+                    continue;
+                }
+            }
+            else
+            {
+                sector1 += arc;
+                if (sector1 >= SOLID_SECTORS) {break;}
+
+                if (collides(sector1, arc / 2, sector2, arc))
+                {
+                    arc /= 2;
+                    continue;
+                }
+                else
+                {
+                    sector1 += arc / 2;
+                    arc /= 2;
+                    continue;
+                }
+            }
+        }
+
+
         // Calculate angle from s1 to s2
         // TODO: Optimize out atan2
         float r = atan2(s2->x - s1->x, s2->y - s1->y);
@@ -259,15 +355,14 @@ struct Solid
         r2 = fmod(r2, M_PI * 2.0f);
         if (r2 < 0.0f) {r2 += M_PI * 2.0f;}
 
-        unsigned int bin1 = round(r1 * ROTATION_BINS / M_PI_2);
-        assert(bin1 < ROTATION_BINS);
+        unsigned int bin1 = round(r1 * SOLID_SECTORS / M_PI_2);
+        assert(bin1 < SOLID_SECTORS);
 
-        unsigned int bin2 = round(r2 * ROTATION_BINS / M_PI_2);
-        assert(bin2 < ROTATION_BINS);
+        unsigned int bin2 = round(r2 * SOLID_SECTORS / M_PI_2);
+        assert(bin2 < SOLID_SECTORS);
 
-        RotationCache &rc1 = s1->rotation_caches[bin1];
-        RotationCache &rc2 = s2->rotation_caches[bin2];
-
+        Sector &sector1 = s1->sectors[bin1];
+        Sector &sector2 = s2->sectors[bin2];
     }
 
     void apply_impulse(float x, float y, float ix, float iy)
@@ -278,6 +373,8 @@ protected:
     //GLuint texture;
 
     RotationCache rotation_caches[ROTATION_BINS];
+
+    Sector sectors[SOLID_SECTORS];
 };
 
 #endif // SOLID_H

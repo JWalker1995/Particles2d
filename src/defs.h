@@ -19,6 +19,9 @@
 
 #define ROTATION_BINS 256
 
+// The number of sectors to divide each solid into. Must be a power of 2.
+#define SOLID_SECTORS 64
+
 #define STRIPE_WIDTH 16.0f
 
 #define MIN_STRIP_WIDTH 4.0f
