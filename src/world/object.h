@@ -7,12 +7,17 @@ class Object
 {
     float x;
     float y;
-    float rad;
     float mass;
 
+    float rad;
     float rel_aabb[4];
+    float aabb[4];
 
     unsigned int scale;
+
+    static void collide(Object &obj1, Object &obj2)
+    {
+    }
 };
 
 #endif // OBJECT_H

@@ -102,12 +102,18 @@ protected:
     OffsetVector<OffsetVector<Node>> grid;
 
     /*
-    Solids should only search for solids larger than itself:
+    Solids should only search for solids that don't search for themselves:
+        This is to avoid double collisions
+    Incorrect, but good implementation of above principle - Solids should only search for solids larger than itself:
         Imagine an explosion that creates hundreds of large solids (n solids, with radius r) and thousands of small particles (m particles, with radius 1).
         If the large solids collided with the smaller particles, each large solid would have to test many small particles inside it's aabb. About (4-pi)*r^2*n tests.
         In addition, the small solids would have to test about 1 or 2 large particles.
 
     Reference frame shifting
+        The reference frame should be locked to the largest object in the world. On the ground, this would be the earth. In space, this might be a spaceship or asteroid.
+
+    Broadphase:
+
 
     Foreach solid:
         If velocity < threshold: // Or detect when neighbors are being not kept long enough
